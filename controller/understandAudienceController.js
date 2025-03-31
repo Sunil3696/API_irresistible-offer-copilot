@@ -4,7 +4,7 @@ const UnderstandAudience = require("../models/UnderstandAudience");
 // Generate GPT-based response and save
 const generateUnderstandAudience = async (req, res) => {
   const { qaPairs } = req.body;
-  const email = "ai.studio.projects@gmail.com"; // You can replace with dynamic email if needed
+  const email = req.user.email;
 
   try {
     // Format QA for GPT
@@ -109,7 +109,7 @@ Simple process to get started immediately
 
 // Fetch user data
 const getUserData = async (req, res) => {
-  const { email } = req.params;
+  const email = req.user.email;
 
   try {
     const userData = await UnderstandAudience.findOne({ email });
@@ -126,19 +126,22 @@ const getUserData = async (req, res) => {
 
 // Delete user data
 const deleteUserData = async (req, res) => {
-  const { email } = req.params;
+  const email = req.user.email;
 
   try {
-    const result = await UnderstandAudience.deleteOne({ email: email });
+    const result = await TrafficSource.updateOne(
+      { email: email },
+      { $unset: { gptResponse: "" } } 
+    );
 
-    if (result.deletedCount === 1) {
-      res.status(200).json({ message: "User data deleted successfully" });
+    if (result.modifiedCount === 1) {
+      res.status(200).json({ message: "User data reset successfully" });
     } else {
       res.status(404).json({ message: "User data not found" });
     }
   } catch (error) {
-    console.error("Error deleting user data:", error);
-    res.status(500).json({ error: "Failed to delete user data" });
+    console.error("Error resetting user data:", error);
+    res.status(500).json({ error: "Failed to reset user data" });
   }
 };
 
