@@ -130,7 +130,7 @@ const deleteUserData = async (req, res) => {
   const email = req.user.email;
 
   try {
-    const result = await TrafficSource.updateOne(
+    const result = await UnderstandAudience.updateOne(
       { email: email },
       { $unset: { gptResponse: "" } } 
     );
