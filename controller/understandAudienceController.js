@@ -3,8 +3,8 @@ const UnderstandAudience = require("../models/UnderstandAudience");
 
 // Generate GPT-based response and save
 const generateUnderstandAudience = async (req, res) => {
-  const { qaPairs } = req.body;
-  console.log(qaPairs)
+  const { formData } = req.body;
+const qaPairs = formData
   const email = req.user.email;
 
   try {
@@ -70,7 +70,7 @@ Simple process to get started immediately
       }
     ];
 
-    console.log(prompt)
+    // console.log(prompt)
 
     // Call GPT API
     const response = await axios.post(
