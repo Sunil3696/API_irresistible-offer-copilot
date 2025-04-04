@@ -100,7 +100,9 @@ Simple process to get started immediately
       { upsert: true, new: true }
     );
 
-    res.json({ answer: gptContent });
+    res.json({ answer: gptContent ,
+        usages: response.data.usage
+    });
 
   } catch (error) {
     console.error("Error:", error);
