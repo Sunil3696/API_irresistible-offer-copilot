@@ -1,11 +1,27 @@
 const axios = require("axios");
 const UnderstandAudience = require("../models/UnderstandAudience");
-
+const { MongoClient } = require("mongodb");
+require('dotenv').config();
+const uri = process.env.MONGO_URI;
+const dbName = "AI_PORTAL"; // change if yours is different
 // Generate GPT-based response and save
 const generateUnderstandAudience = async (req, res) => {
   const { formData } = req.body;
 const qaPairs = formData
   const email = req.user.email;
+  const selectedAssets = req.body?.selectedAssets
+console.log
+  if (selectedAssets && Array.isArray(selectedAssets)) {
+    const previewText = selectedAssets
+      .map(asset => {
+        const category = asset.category || 'Unknown Category';
+        const content = asset.content || 'not given';
+        return `${category}: ${content}`;
+      })
+      .join(' and ');
+  
+    console.log("Preview Text:", previewText);
+  }
 
   try {
     // Format QA for GPT
@@ -148,4 +164,54 @@ const deleteUserData = async (req, res) => {
   }
 };
 
-module.exports = { generateUnderstandAudience, getUserData, deleteUserData };
+
+const getUserassets = async (req, res) => {
+  const client = new MongoClient(uri);
+  const email = req.user.email;
+
+  if (!email) {
+    return res.status(400).json({ msg: "Email is required" });
+  }
+
+  try {
+    await client.connect();
+    const db = client.db(dbName);
+
+    // Define the collections you want to extract gptResponse from
+    const collections = [
+      "valuepropositions",
+      "targetmarkets",
+      "trafficsources",
+      "understandaudiences",
+      "valueladders",
+      "businessstrategies",
+      "fyscopilots",
+      "fycniches",
+      "fycopilots",
+      "fyconsultingniches"
+    ];
+
+    const result = {};
+
+    // Loop through each collection and pull gptResponse fields
+    for (const collectionName of collections) {
+      const data = await db.collection(collectionName)
+        .find({ email }, { projection: { gptResponse: 1 } })
+        .toArray();
+
+      // Filter only documents that contain gptResponse
+      result[collectionName] = data
+        .filter(item => item.gptResponse)
+        .map(item => item.gptResponse);
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching GPT responses:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  } finally {
+    await client.close();
+  }
+};
+
+module.exports = { generateUnderstandAudience, getUserData, deleteUserData , getUserassets};
